@@ -1,0 +1,46 @@
+{
+  "variables": {
+    "output_dir": "gen/packer",
+    "product": "centos-6.9-x86_64"
+  },
+  "builders": [{
+    "type": "virtualbox-iso",
+    "guest_os_type": "RedHat_64",
+    "iso_urls": [
+      "http://mirror.es.its.nyu.edu/centos/6.9/isos/x86_64/CentOS-6.9-x86_64-minimal.iso"
+    ],
+    "iso_checksum": "422af57b493b8af49d485885a730c5a1d955f803fac85aa51311c393168b9080",
+    "iso_checksum_type": "sha256",
+    "ssh_username": "vagrant",
+    "ssh_password": "vagrant",
+    "headless": true,
+    "hard_drive_interface": "sata",
+    "http_directory": "{{ template_dir }}/http",
+    "boot_command": [
+      "<wait><esc><esc>",
+      "linux ks=http://{{.HTTPIP}}:{{.HTTPPort}}/ks.cfg<enter>"
+    ],
+    "shutdown_command": "sudo -S shutdown -P now"
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "inline": [
+      "sudo yum update -y",
+      "sudo mkdir /tmp/vboxguest",
+      "sudo mount -t iso9660 -o loop /home/vagrant/VBoxGuestAdditions.iso /tmp/vboxguest",
+      "sudo yum -y groupinstall 'Development Tools'",
+      "sudo yum -y install kernel-devel-$(uname -r)",
+      "cd /tmp/vboxguest",
+      "sudo ./VBoxLinuxAdditions.run",
+      "cd /tmp",
+      "sudo umount /tmp/vboxguest",
+      "sudo rmdir /tmp/vboxguest",
+      "rm /home/vagrant/VBoxGuestAdditions.iso",
+      "echo Image Provisioned!"
+    ]
+  }],
+  "post-processors": [{
+    "type": "vagrant",
+    "output": "{{ user `output_dir` }}/{{ user `product` }}/{{ user `product` }}-{{ .Provider }}.box"
+  }]
+}

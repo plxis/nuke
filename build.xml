@@ -1,0 +1,25 @@
+<project name="nuke" default="package-iso">
+  <property name="project.title" value="Nuke" />
+  <property name="project.description" value="Build base images for use with Vagrant"/>  
+  <property name="build-packer.product" value="centos-7.4-x86_64" />
+  <property name="build-packer.output.dir" value="$gen/packer" />
+  
+  <target name="package-iso">
+    <echo message="Building ${build-packer.product}" />
+    <exec executable="packer" failonerror="true" failifexecutionfails="true">
+      <arg value="build" />
+      <arg value="-force" />
+      <arg value="-var" />
+      <arg value="'product=${build-packer.product}'" />
+      <arg value="-var" />
+      <arg value="'output_dir=${build-packer.output.dir}'" />
+      <arg value="products/${build-packer.product}/packer.json" />
+    </exec>
+  </target>
+  
+  <target name="publish-iso">
+    <copy todir="${artifacts.dir}" overwrite="true">
+      <fileset dir="${build-packer.output.dir}" />
+    </copy>
+  </target>  
+</project>
